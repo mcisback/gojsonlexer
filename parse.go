@@ -59,7 +59,7 @@ func (p *Parser) parseArray(l* Lexer, pos *int) JsonNode {
 		Type: JSON_NODE_ARRAY,
 	}
 
-	var newValueNode *JsonNode
+	var newValueNode *JsonNode = nil
 	
 	for {
 		if *pos >= len(l.Tokens) {
@@ -105,10 +105,26 @@ func (p *Parser) parseArray(l* Lexer, pos *int) JsonNode {
 					Value: token.Value,
 				},
 			} 
+		case TOKEN_BOOLEAN:
+			fmt.Println("Found TOKEN_BOOLEAN !")
+
+			newValueNode = &JsonNode{
+				Type: JSON_NODE_VALUE,
+				Value: JsonValue{
+					Type: JSON_VALUE_BOOLEAN,
+					Value: token.Value,
+				},
+			}
 		case TOKEN_COMMA:
+			if newValueNode == nil {
+				log.Fatalln("Error TOKEN_COMMA JSON Array")
+			}
+
 			fmt.Println("Found COMMA !")
 			fmt.Println("NewValueNode: ", *newValueNode)
 			node.Children = append(node.Children, *newValueNode)
+
+			newValueNode = nil
 		case TOKEN_ARR_END:
 			fmt.Println("Array End: ", node)
 

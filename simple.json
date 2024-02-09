@@ -4,9 +4,12 @@
 	"va",
 	[
 		"jello",
-		"world",
+		"world"
 		1234,
 	],
+	true,
+	false,
+	true,
 	1231,
 	1241,
 	1421421,
