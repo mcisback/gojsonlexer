@@ -1,0 +1,26 @@
+[
+  {
+    "userId": 11231,
+    "id": 1,
+    "title": "delectus aut autem",
+    "completed": false,
+	 "posts": null,
+	 "admin": true
+  },
+  {
+    "userId": 12313,
+    "id": 2,
+    "title": "quis ut nam facilis et officia qui",
+    "completed": false,
+	 "posts": null,
+	 "admin": false
+  },
+  {
+    "userId": 1231231,
+    "id": 3,
+    "title": "fugiat veniam minus",
+    "completed": true,
+	 "posts": [],
+	 "admin": true
+  }
+]
