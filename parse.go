@@ -223,18 +223,6 @@ func (p *Parser) parseObject(l *Lexer, pos *int) JsonNode {
 			fmt.Println("New PAIR: ", objKey, valueNode)
 
 			object.Pairs[objKey] = *valueNode
-		// case TOKEN_COL: // Prende il valore fino a COMMA e crea nuova pair
-
-		// case TOKEN_COMMA: // Aggiunge la pair all'oggetto
-		// 	if newValueNode == nil {
-		// 		log.Fatalln("Error TOKEN_COMMA JSON Array")
-		// 	}
-
-		// 	fmt.Println("Found COMMA !")
-		// 	fmt.Println("NewValueNode: ", *newValueNode)
-		// 	node.Children = append(node.Children, *newValueNode)
-
-		// 	newValueNode = nil
 		case TOKEN_OBJ_END:
 			node.Value = *object
 
@@ -369,6 +357,33 @@ func printParser(node *JsonNode, level int) {
 	}
 }
 
+func printJsonValue(node *JsonNode, key string, last bool) {
+	if key != "" {
+		fmt.Print("\"", key, "\": ")
+	}
+
+	value := node.Value.(JsonValue)
+
+	switch value.Type {
+	case JSON_VALUE_BOOLEAN, JSON_VALUE_NUMBER, JSON_VALUE_NULL:
+		fmt.Print(value.Value)
+	case JSON_VALUE_STRING:
+		if !last {
+			fmt.Print("\"")
+		}
+
+		fmt.Print(value.Value)
+
+		if !last {
+			fmt.Print("\"")
+		}
+	}
+
+	if !last {
+		fmt.Println(",")
+	}
+}
+
 func printJson(node *JsonNode, level int, key string) {
 	separator := "\t"
 
@@ -380,25 +395,8 @@ func printJson(node *JsonNode, level int, key string) {
 		fmt.Println("[")
 	} else if node.Type == JSON_NODE_OBJECT {
 		fmt.Println("{")
-	} else {
-		if key != "" {
-			fmt.Print(key, ": ")
-		}
-
-		switch node.Value.(type) {
-		case JsonValue:
-			value := node.Value.(JsonValue)
-
-			switch value.Type {
-			case JSON_VALUE_BOOLEAN, JSON_VALUE_NUMBER, JSON_VALUE_NULL:
-				fmt.Print(value.Value, ",")
-			case JSON_VALUE_STRING:
-				fmt.Print("\"", value.Value, "\",")
-			}
-
-		}
-
-		fmt.Println("")
+	} else if node.Type == JSON_NODE_VALUE {
+		printJsonValue(node, key, false)
 	}
 
 	if len(node.Children) > 0 {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -20,6 +21,9 @@ func main() {
 	json := GoJson{}
 
 	json.fromFile(jsonFilename)
+
+	fmt.Println()
+	fmt.Println()
 
 	json.get(jsonPath)
 

@@ -20,7 +20,14 @@
     "id": 3,
     "title": "fugiat veniam minus",
     "completed": true,
-	 "posts": [],
-	 "admin": true
+	  "posts": [
+      {
+        "user1": "paperino"
+      },
+      {
+        "user2": "pippo"
+      }
+    ],
+	  "admin": true
   }
 ]

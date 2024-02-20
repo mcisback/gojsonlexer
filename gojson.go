@@ -33,9 +33,9 @@ func (json *GoJson) fromFile(filename string) {
 
 	fmt.Println("Parser: ", *json.parser)
 
-	fmt.Println("Printin Parser: ")
+	// fmt.Println("Printin Parser: ")
 
-	printParser(&json.parser.Root, 0)
+	// printParser(&json.parser.Root, 0)
 }
 
 func (json *GoJson) get(path string) {
@@ -57,10 +57,10 @@ func (json *GoJson) get(path string) {
 		if part == "$" {
 			node = &json.parser.Root
 
-			fmt.Println("QUERY_ROOT_NODE: ", part, *node)
+			// fmt.Println("QUERY_ROOT_NODE: ", part, *node)
 		} else if part == "[]" {
 			node = &node.Children[0]
-			fmt.Println("QUERY_ARRAY: ", part)
+			// fmt.Println("QUERY_ARRAY: ", part)
 		} else if match := arrayValueRegex.FindStringSubmatch(part); len(match) > 1 {
 			index, _ := strconv.ParseInt(match[1], 10, 32)
 
@@ -70,7 +70,7 @@ func (json *GoJson) get(path string) {
 
 			node = &node.Children[index]
 
-			fmt.Println("QUERY_ARRAY_VALUE: ", match[1], index)
+			// fmt.Println("QUERY_ARRAY_VALUE: ", match[1], index)
 		} else if match := objectValueRegex.FindStringSubmatch(part); len(match) > 1 {
 			key := match[1]
 
@@ -82,7 +82,7 @@ func (json *GoJson) get(path string) {
 
 			//node = object.Pairs[index]
 
-			fmt.Println("QUERY_OBJECT_VALUE: ", match[1], key, value)
+			// fmt.Println("QUERY_OBJECT_VALUE: ", match[1], key, value)
 		} else if match := keyRegex.FindStringSubmatch(part); len(match) > 1 {
 			key := match[1]
 
@@ -94,14 +94,18 @@ func (json *GoJson) get(path string) {
 
 			//node = object.Pairs[index]
 
-			fmt.Println("QUERY_OBJECT_KEY: ", match[1], key, value)
+			// fmt.Println("QUERY_OBJECT_KEY: ", match[1], key, value)
 		}
 
 		if node == nil {
 			log.Fatalln("Missing $ ?")
 		}
+	}
 
+	if node.Type == JSON_NODE_ARRAY || node.Type == JSON_NODE_OBJECT {
 		printJson(node, 0, "")
+	} else if node.Type == JSON_NODE_VALUE {
+		printJsonValue(node, "", true)
 	}
 
 }
