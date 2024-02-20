@@ -25,7 +25,7 @@ func main() {
 	fmt.Println()
 	fmt.Println()
 
-	node := json.get(jsonPath)
+	node := json.get(jsonPath, nil)
 
 	json.outputJson(node)
 

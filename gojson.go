@@ -38,15 +38,19 @@ func (json *GoJson) fromFile(filename string) {
 	// printParser(&json.parser.Root, 0)
 }
 
-func (json *GoJson) get(path string) *JsonNode {
+func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 
-	var node *JsonNode = &json.parser.Root
+	var node *JsonNode = rootNode
 	var arrayValueRegex = regexp.MustCompile(`^\[(\d+)]`)
 	var arrayByIndexRegex = regexp.MustCompile(`^(\d+)`)
 	var objectValueRegex = regexp.MustCompile(`^\[\"([^"]+)\"]`)
 	var keyRegex = regexp.MustCompile(`^(\w+)`)
 	// var lenRegex = regexp.MustCompile(`^len\(([^\)]+)\)`)
 	// var getKeysRegex = regexp.MustCompile(`^keys\(([^\)]+)\)`)
+
+	if node == nil {
+		node = &json.parser.Root
+	}
 
 	funcs := strings.Split(path, "|")
 
@@ -59,7 +63,7 @@ func (json *GoJson) get(path string) *JsonNode {
 
 		if f == "len" {
 
-			node = json.get(funcs[i+1])
+			node = json.get(funcs[i+1], nil)
 
 			// fmt.Println("Matched len()")
 
@@ -90,7 +94,7 @@ func (json *GoJson) get(path string) *JsonNode {
 
 		if f == "keys" {
 
-			node = json.get(funcs[i+1])
+			node = json.get(funcs[i+1], nil)
 
 			// fmt.Println("Matched keys()")
 
@@ -148,12 +152,46 @@ func (json *GoJson) get(path string) *JsonNode {
 
 			// fmt.Println("QUERY_ROOT_NODE: ", part, *node)
 		} else if part == "[]" {
+			fmt.Println("node: ", node)
+			fmt.Println("node.Children: ", node.Children)
+
 			if len(node.Children) <= 0 {
-				log.Fatalln("Error, Array out of range")
+				log.Fatalln("JSON Error, Array out of range")
 			}
 
-			node = &node.Children[0]
-			// fmt.Println("QUERY_ARRAY: ", part)
+			resultArray := JsonNode{
+				Type: JSON_NODE_ARRAY,
+			}
+
+			for _, n := range node.Children {
+				joined := strings.Join(parts[(i+1):], ".")
+
+				if joined == "" {
+					return node
+				}
+
+				// fmt.Println("[")
+
+				// value := JsonNode{
+				// 	Type: JSON_NODE_VALUE,
+				// 	Value: JsonValue{
+				// 		Type:  JSON_VALUE_STRING,
+				// 		Value: key,
+				// },
+
+				fmt.Println("[] Joined Parts: ", joined)
+
+				value := json.get(joined, &n)
+
+				resultArray.Children = append(resultArray.Children, *value)
+				// fmt.Print("\t\"", key, "\",\n")
+
+				fmt.Println("ResultArray: ", resultArray)
+
+			}
+
+			return &resultArray
+
 		} else if match := arrayByIndexRegex.FindStringSubmatch(part); len(match) > 1 {
 			if node.Type != JSON_NODE_ARRAY {
 				log.Fatalln("Error, matching for an index in non JSON Array")
@@ -226,6 +264,8 @@ func (json *GoJson) get(path string) *JsonNode {
 			// fmt.Println("QUERY_OBJECT_KEY: ", match[1], key, value)
 		} else {
 			log.Fatalln("Error, cannot undestrand: \"", part, "\"")
+
+			// return node
 		}
 
 		if node == nil {
