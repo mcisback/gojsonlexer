@@ -4,13 +4,26 @@
 	"va",
 	[
 		"jello",
-		"world"
+		"world",
 		1234,
+		true
 	],
 	true,
 	false,
 	true,
+	{
+		"username": "Marco",
+		"password": "dsaodksao",
+		"posts": {
+			"id": 1,
+			"comments": [
+				"Hello",
+				"World"
+			]
+		}
+
+	},
 	1231,
 	1241,
-	1421421,
+	1421421
 ]

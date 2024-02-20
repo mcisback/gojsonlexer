@@ -1,0 +1,20 @@
+[
+	"ciao",
+	"come",
+	"va",
+	[
+		"jello",
+		"world",
+		1234,
+		true
+	],
+	{
+		"user": "Marco",
+		"pass": "Boolean"
+	},
+	true,
+	false,
+	1231,
+	1241,
+	1421421
+]

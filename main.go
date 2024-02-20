@@ -1,42 +1,26 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
 	"log"
+	"os"
 )
-
-func readFile(filename string) []byte {
-	bytes, err := ioutil.ReadFile(filename) // just pass the file name
-	if err != nil {
-   	log.Fatalln(err)
-	}
-
-	return bytes
-}
 
 func main() {
 	if len(os.Args) <= 1 {
-		log.Fatal("Missing json filename")
+		log.Fatal("Missing json query")
 	}
 
-	var jsonFilename = os.Args[1]
+	if len(os.Args) <= 2 {
+		log.Fatal("Missing json file")
+	}
 
-	bytes := readFile(jsonFilename)
+	var jsonPath = os.Args[1]
+	var jsonFilename = os.Args[2]
 
-	lexer := Lexer{}
+	json := GoJson{}
 
-	lexer.lexer(bytes)
+	json.fromFile(jsonFilename)
 
-	// fmt.Println("Lexer: ", lexer.Tokens)
-	fmt.Println("Starting Parser: ")
+	json.get(jsonPath)
 
-	parser := Parser{}
-
-	parser.parse(&lexer)
-
-	fmt.Println("Parser: ", parser)
-
-	printParser(&parser.Root, 0)
 }

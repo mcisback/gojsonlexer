@@ -6,57 +6,75 @@ import (
 )
 
 const (
-	TOKEN_START = "TOKEN_START"
-	TOKEN_STRING = "TOKEN_STRING"
-	TOKEN_NUMBER = "TOKEN_NUMBER"
-	TOKEN_BOOLEAN = "TOKEN_BOOLEAN"
-	TOKEN_COL = "TOKEN_COL"
-	TOKEN_COMMA = "TOKEN_COMMA"
+	TOKEN_START     = "TOKEN_START"
+	TOKEN_STRING    = "TOKEN_STRING"
+	TOKEN_NUMBER    = "TOKEN_NUMBER"
+	TOKEN_BOOLEAN   = "TOKEN_BOOLEAN"
+	TOKEN_COL       = "TOKEN_COL"
+	TOKEN_COMMA     = "TOKEN_COMMA"
 	TOKEN_OBJ_START = "TOKEN_OBJ_START"
-	TOKEN_OBJ_END = "TOKEN_OBJ_END"
+	TOKEN_OBJ_END   = "TOKEN_OBJ_END"
 	TOKEN_ARR_START = "TOKEN_ARR_START"
-	TOKEN_ARR_END = "TOKEN_ARR_END"
-	TOKEN_NULL = "TOKEN_NULL"
+	TOKEN_ARR_END   = "TOKEN_ARR_END"
+	TOKEN_NULL      = "TOKEN_NULL"
 )
 
 type TokenType string
 
 type Token struct {
-	Type TokenType
+	Type  TokenType
 	Value string
+	Line  int
 }
 
 type Lexer struct {
 	Tokens []Token
 	Buffer []byte
 	Length int
+	Line   int
+	// TokenIndex int
 	// ? Children []Lexer
 }
 
 func isDigit(c byte) bool {
- return c == '0' || c == '1' || c =='2' || c =='3' || c =='4' || c =='5' || c =='6' || c =='7' || c =='8' || c =='9'
+	return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9'
 }
 
 func incPos(pos *int, inc int) {
 	*pos = *pos + inc
 }
 
-func (l *Lexer) addToken(Type TokenType, Value string) {		
+func (l *Lexer) createToken(Type TokenType, Value string) {
 	token := Token{
-		Type: Type,
+		Type:  Type,
 		Value: Value,
+		Line:  l.Line,
 	}
-	
+
 	l.Tokens = append(l.Tokens, token)
 }
+
+// func (l *Lexer) getToken() Token {
+// 	token := l.Tokens[l.TokenIndex]
+
+// 	return token
+// }
+
+// func (l *Lexer) shift() Token {
+// 	token := l.getToken()
+
+// 	l.TokenIndex += 1
+
+// 	return token
+// }
 
 func (l *Lexer) readString(pos *int) string {
 	var literal string = ""
 	for {
 		c := l.Buffer[*pos]
-	
+
 		// TODO: Handle escaping
-		
+
 		if c == '"' {
 			break
 		}
@@ -75,7 +93,7 @@ func (l *Lexer) readBoolean(pos *int) string {
 	if l.Buffer[*pos] == 't' {
 		literal = string(l.Buffer[(*pos):(*pos + 4)])
 
-		if(literal != "true") {
+		if literal != "true" {
 			log.Fatalln("JSON: Error Wrong Boolean -> ", *pos, literal, string(l.Buffer[(*pos-50):(*pos+50)]))
 		}
 
@@ -85,7 +103,7 @@ func (l *Lexer) readBoolean(pos *int) string {
 	} else if l.Buffer[*pos] == 'f' {
 		literal = string(l.Buffer[(*pos):(*pos + 5)])
 
-		if(literal != "false") {
+		if literal != "false" {
 			log.Fatalln("JSON: Error Wrong Boolean -> ", *pos, literal, string(l.Buffer[(*pos-50):(*pos+50)]))
 		}
 
@@ -138,9 +156,10 @@ func (l *Lexer) lexer(buffer []byte) {
 	l.Buffer = buffer
 	l.Length = len(buffer)
 
-	l.addToken(TOKEN_START, "")
+	l.createToken(TOKEN_START, "")
 
 	pos := 0
+	l.Line = 0
 
 	for {
 		if pos >= (l.Length - 1) {
@@ -152,54 +171,62 @@ func (l *Lexer) lexer(buffer []byte) {
 
 		fmt.Println("Processing byte: ", string(c))
 
-		switch(c) {
+		switch c {
 		// use recursion ? lexer.childern = l.lexer(l.Buffer[i:])
-		case '\n',' ','\r','\t':
+		case '\n', ' ', '\r', '\t':
+			if c == '\n' {
+				l.Line++
+			}
+
 			fmt.Println("Found newline space or tab, skipping...")
 			break
-		case '{': 
-			l.addToken(TOKEN_OBJ_START, "{")
+		case '{':
+			l.createToken(TOKEN_OBJ_START, "{")
 		case '[':
-			l.addToken(TOKEN_ARR_START, "[")
+			l.createToken(TOKEN_ARR_START, "[")
 		case '}':
-			l.addToken(TOKEN_OBJ_END, "}")
+			l.createToken(TOKEN_OBJ_END, "}")
 		case ']':
-			l.addToken(TOKEN_ARR_END, "]")
+			l.createToken(TOKEN_ARR_END, "]")
 		case ',':
-			l.addToken(TOKEN_COMMA, ",")
+			fmt.Println("Lexer: Found TOKEN_COMMA")
+
+			l.createToken(TOKEN_COMMA, ",")
 		case '"':
 			pos++
 
 			literal := l.readString(&pos)
 
-			l.addToken(TOKEN_STRING, literal)
+			l.createToken(TOKEN_STRING, literal)
 
 			fmt.Println("After readString: ", pos, string(c), literal)
 		case ':':
 			fmt.Println("Found TOKEN_COL", pos, string(c))
 
-			l.addToken(TOKEN_COL, ":")
-		case 't','f':
+			l.createToken(TOKEN_COL, ":")
+		case 't', 'f':
+			fmt.Println("Lexer: Found TOKEN_BOOLEAN ?")
 			fmt.Println("Found t or f, maybe Boolean: ", string(l.Buffer[pos:(pos+5)]))
 			literal := l.readBoolean(&pos)
 
+			pos--
+
 			fmt.Println("After readBoolean: ", pos, literal)
 
-			l.addToken(TOKEN_BOOLEAN, literal)
+			l.createToken(TOKEN_BOOLEAN, literal)
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			literal := l.readNumber(&pos)
 
-			l.addToken(TOKEN_NUMBER, literal)
+			l.createToken(TOKEN_NUMBER, literal)
 		case 'n':
 			literal := l.readNull(&pos)
 
-			l.addToken(TOKEN_NULL, literal)
+			l.createToken(TOKEN_NULL, literal)
 		default:
-			fmt.Println("Char, Pos is: ", c, pos)
-			// log.Fatalln("Error Lexing JSON at: ", pos, string(l.Buffer[pos:(pos+100)]))
+			// fmt.Println("Char, Pos is: ", c, pos)
+			log.Fatalln("Error Lexing JSON at: ", l.Line, ":", pos, string(l.Buffer[(pos-10):(pos+100)]))
 		}
 
 		pos++
 	}
 }
-
