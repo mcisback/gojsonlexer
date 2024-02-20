@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 )
@@ -22,10 +21,10 @@ func main() {
 
 	json.fromFile(jsonFilename)
 
-	fmt.Println()
-	fmt.Println()
+	// fmt.Println()
+	// fmt.Println()
 
-	node := json.get(jsonPath, nil)
+	node := json.getNode(jsonPath, nil)
 
 	json.outputJson(node)
 

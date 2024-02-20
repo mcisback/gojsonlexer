@@ -15,30 +15,73 @@ type GoJson struct {
 	parser *Parser
 }
 
-func (json *GoJson) fromFile(filename string) {
-	bytes, err := os.ReadFile(filename)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
+func (json *GoJson) fromString(jsonData string) {
 	json.lexer = &Lexer{}
 	json.parser = &Parser{}
 
-	json.lexer.lexer(bytes)
+	json.lexer.lexer([]byte(jsonData))
 
 	// fmt.Println("Lexer: ", lexer.Tokens)
-	fmt.Println("Starting Parser: ")
+	// fmt.Println("Starting Parser: ")
 
 	json.parser.parse(json.lexer)
 
-	fmt.Println("Parser: ", *json.parser)
+	// fmt.Println("Parser: ", *json.parser)
 
 	// fmt.Println("Printin Parser: ")
 
 	// printParser(&json.parser.Root, 0)
 }
 
-func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
+func (json *GoJson) fromFile(filename string) {
+	bytes, err := os.ReadFile(filename)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	json.fromString(string(bytes))
+}
+
+// func (json *GoJson) getNodeLength(funcs []string, i int) *JsonNode {
+// 	node := json.getNode(funcs[i+1], nil)
+
+// 	// fmt.Println("Matched len()")
+
+// 	var length int = 0
+
+// 	switch node.Type {
+// 	case JSON_NODE_ARRAY:
+// 		length = len(node.Children)
+
+// 	case JSON_NODE_OBJECT:
+// 		object := node.Value.(JsonObject)
+
+// 		length = len(object.Pairs)
+// 	default:
+// 		log.Fatalln("Error, matching for length in a JsonValue")
+// 	}
+
+// 	value := JsonNode{
+// 		Type: JSON_NODE_VALUE,
+// 		Value: JsonValue{
+// 			Type:  JSON_VALUE_NUMBER,
+// 			Value: fmt.Sprintf("%d", length),
+// 		},
+// 	}
+
+// 	return &value
+// }
+
+func SplitAny(s string, seps string) []string {
+	splitter := func(r rune) bool {
+		return strings.ContainsRune(seps, r)
+	}
+	return strings.FieldsFunc(s, splitter)
+}
+
+func (json *GoJson) getNode(path string, rootNode *JsonNode) *JsonNode {
+
+	// fmt.Println("Called getNode() -> ", path)
 
 	var node *JsonNode = rootNode
 	var arrayValueRegex = regexp.MustCompile(`^\[(\d+)]`)
@@ -47,10 +90,26 @@ func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 	var keyRegex = regexp.MustCompile(`^(\w+)`)
 	// var lenRegex = regexp.MustCompile(`^len\(([^\)]+)\)`)
 	// var getKeysRegex = regexp.MustCompile(`^keys\(([^\)]+)\)`)
+	// var exprsRegex = regexp.MustCompile("[\\:\\,\\.\\s]+")
+	var isObjectRegex = regexp.MustCompile(`^\{([^\}]+)\}`)
 
 	if node == nil {
 		node = &json.parser.Root
 	}
+
+	// $.1 + $.2 or values|$.1+values|$.2 or keys|$.1+keys|$.2
+	// exprs := SplitAny(path, "+")
+
+	// if len(exprs) > 1 {
+
+	// 	for i := 0; i < len(exprs); i++ {
+	// 		expr := exprs[i]
+
+	// 		fmt.Println("EXPR: ", expr)
+
+	// 	}
+
+	// }
 
 	funcs := strings.Split(path, "|")
 
@@ -62,10 +121,9 @@ func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 		// fmt.Println("funcs: ", f)
 
 		if f == "len" {
+			node = json.getNode(strings.Join(funcs[i+1:], "|"), node)
 
-			node = json.get(funcs[i+1], nil)
-
-			// fmt.Println("Matched len()")
+			fmt.Println("Matched len()", node)
 
 			var length int = 0
 
@@ -90,21 +148,32 @@ func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 			}
 
 			return &value
-		}
+		} else if strings.HasPrefix(f, "keys") {
 
-		if f == "keys" {
+			// fmt.Println("f == keys")
+			var index int = -1
+			args := strings.Split(f, ".")
 
-			node = json.get(funcs[i+1], nil)
+			// fmt.Println("keys: ", args)
+
+			if len(args) > 1 {
+				i, _ := strconv.ParseInt(args[1], 10, 32)
+				index = int(i)
+			}
+
+			// fmt.Println("index: ", index)
+
+			node = json.getNode(strings.Join(funcs[i+1:], "|"), nil)
 
 			// fmt.Println("Matched keys()")
+
+			resultArray := JsonNode{
+				Type: JSON_NODE_ARRAY,
+			}
 
 			switch node.Type {
 			case JSON_NODE_OBJECT:
 				object := node.Value.(JsonObject)
-
-				tempNode := JsonNode{
-					Type: JSON_NODE_ARRAY,
-				}
 
 				// fmt.Println("[")
 
@@ -117,11 +186,11 @@ func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 						},
 					}
 
-					tempNode.Children = append(tempNode.Children, value)
+					resultArray.Children = append(resultArray.Children, value)
 					// fmt.Print("\t\"", key, "\",\n")
 				}
 
-				printJson(&tempNode, 0, "")
+				// printJson(&resultArray, 0, "")
 
 				// fmt.Println("]")
 			default:
@@ -129,9 +198,97 @@ func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 			}
 
 			// what if keys($.[0]).[0] ?
-			return node
+			if index >= 0 {
+				if index >= len(resultArray.Children) {
+					log.Fatalln("Keys Array out of range")
+				}
 
+				return &resultArray.Children[index]
+			}
+
+			return &resultArray
+		} else if strings.HasPrefix(f, "values") {
+
+			// fmt.Println("f == keys")
+			var index int = -1
+			args := strings.Split(f, ".")
+
+			// fmt.Println("keys: ", args)
+
+			if len(args) > 1 {
+				i, _ := strconv.ParseInt(args[1], 10, 32)
+				index = int(i)
+			}
+
+			// fmt.Println("index: ", index)
+
+			node = json.getNode(strings.Join(funcs[i+1:], "|"), nil)
+
+			// fmt.Println("Matched keys()")
+
+			resultArray := JsonNode{
+				Type: JSON_NODE_ARRAY,
+			}
+
+			switch node.Type {
+			case JSON_NODE_OBJECT:
+				object := node.Value.(JsonObject)
+
+				// fmt.Println("[")
+
+				for key := range object.Pairs {
+
+					// value := JsonNode{
+					// 	Type:  JSON_NODE_VALUE,
+					// 	Value: object.Pairs[key],
+					// }
+
+					// fmt.Println("key: ", key, object.Pairs[key])
+
+					resultArray.Children = append(resultArray.Children, object.Pairs[key])
+					// fmt.Print("\t\"", key, "\",\n")
+				}
+
+				// printJson(&resultArray, 0, "")
+
+				// fmt.Println("]")
+			default:
+				log.Fatalln("Error, getting values in a non JsonObject")
+			}
+
+			// what if keys($.[0]).[0] ?
+			if index >= 0 {
+				if index >= len(resultArray.Children) {
+					log.Fatalln("Keys Array out of range")
+				}
+
+				// Works badly i dunno why (order is changes when index changes and i dunno why)
+				return &resultArray.Children[index]
+			}
+
+			return &resultArray
+		} else if match := isObjectRegex.FindStringSubmatch(f); len(match) > 1 {
+			// Create new json from string and maybe add it to existing json
+			// fmt.Println("isObjectRegex match: ", match)
+
+			jsonData := match[0]
+
+			fmt.Println("isObjectRegex match: ", jsonData)
+
+			j := GoJson{}
+
+			j.fromString(jsonData)
+
+			// fmt.Println()
+			// fmt.Println()
+
+			newNode := j.getNode("$", nil)
+
+			fmt.Println(newNode)
 		}
+		// } else {
+		// 	return json.getNode(strings.Join(funcs[i+1:], "|"), node)
+		// }
 	}
 
 	parts := strings.Split(path, ".")
@@ -152,8 +309,8 @@ func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 
 			// fmt.Println("QUERY_ROOT_NODE: ", part, *node)
 		} else if part == "[]" {
-			fmt.Println("node: ", node)
-			fmt.Println("node.Children: ", node.Children)
+			// fmt.Println("node: ", node)
+			// fmt.Println("node.Children: ", node.Children)
 
 			if len(node.Children) <= 0 {
 				log.Fatalln("JSON Error, Array out of range")
@@ -179,20 +336,22 @@ func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 				// 		Value: key,
 				// },
 
-				fmt.Println("[] Joined Parts: ", joined)
+				// fmt.Println("[] Joined Parts: ", joined)
 
-				value := json.get(joined, &n)
+				value := json.getNode(joined, &n)
 
 				resultArray.Children = append(resultArray.Children, *value)
 				// fmt.Print("\t\"", key, "\",\n")
 
-				fmt.Println("ResultArray: ", resultArray)
+				// fmt.Println("ResultArray: ", resultArray)
 
 			}
 
 			return &resultArray
 
 		} else if match := arrayByIndexRegex.FindStringSubmatch(part); len(match) > 1 {
+			// fmt.Println("arraybyIndexRegex: ", match[1])
+
 			if node.Type != JSON_NODE_ARRAY {
 				log.Fatalln("Error, matching for an index in non JSON Array")
 			}
@@ -273,9 +432,25 @@ func (json *GoJson) get(path string, rootNode *JsonNode) *JsonNode {
 		}
 	}
 
+	// fmt.Println("Returning node: ", node)
+
 	return node
 
 }
+
+// func (json *GoJson) getNodeValue(node *JsonNode) string {
+// 	// if node.Type == JSON_NODE_ARRAY || node.Type == JSON_NODE_OBJECT {
+// 	// 	return node
+// 	// } else if node.Type == JSON_NODE_VALUE {
+// 	// 	value := node.Value.(JsonValue)
+
+// 	// 	return value.Value
+// 	// }
+
+// 	value := node.Value.(JsonValue)
+
+// 	return value.Value
+// }
 
 func (json *GoJson) outputJson(node *JsonNode) {
 	if node.Type == JSON_NODE_ARRAY || node.Type == JSON_NODE_OBJECT {

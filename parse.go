@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -15,18 +14,18 @@ func (p *Parser) parseArray(l *Lexer, pos *int) JsonNode {
 
 	for {
 		if *pos >= len(l.Tokens) {
-			fmt.Println("Error Processing JSON Array at: ", *pos, l.Line)
+			// fmt.Println("Error Processing JSON Array at: ", *pos, l.Line)
 
 			return node
 		}
 
 		token := l.Tokens[*pos]
 
-		fmt.Println("Processing Array Token: ", *pos, token)
+		// fmt.Println("Processing Array Token: ", *pos, token)
 
 		switch token.Type {
 		case TOKEN_ARR_START:
-			fmt.Println("Entering Subarray: ", *pos, token)
+			// fmt.Println("Entering Subarray: ", *pos, token)
 
 			*pos = *pos + 1
 
@@ -40,7 +39,7 @@ func (p *Parser) parseArray(l *Lexer, pos *int) JsonNode {
 
 		// TODO: Object start
 		case TOKEN_OBJ_START:
-			fmt.Println("Entering Subobject inside Array: ", l.Line, ":", *pos, token)
+			// fmt.Println("Entering Subobject inside Array: ", l.Line, ":", *pos, token)
 
 			*pos = *pos + 1
 
@@ -53,34 +52,20 @@ func (p *Parser) parseArray(l *Lexer, pos *int) JsonNode {
 			// *pos = *pos + 1
 
 		case TOKEN_STRING, TOKEN_BOOLEAN, TOKEN_NUMBER, TOKEN_NULL:
-			nextToken := l.Tokens[(*pos + 1)]
+			// nextToken := l.Tokens[(*pos + 1)]
 
-			fmt.Println("Found VALUE: ", token.Type, token.Value)
-			fmt.Println("Found VALUE, NEXT TOKEN: ", nextToken.Type, nextToken.Value)
+			// fmt.Println("Found VALUE: ", token.Type, token.Value)
+			// fmt.Println("Found VALUE, NEXT TOKEN: ", nextToken.Type, nextToken.Value)
 
 			newNode := p.parseValue(l, pos)
 			// newValueNode = &newNode
 
-			fmt.Println("VALUE NewValueNode: ", newNode.Type, newNode.Value)
+			// fmt.Println("VALUE NewValueNode: ", newNode.Type, newNode.Value)
 
 			node.Children = append(node.Children, newNode)
 
-		// case TOKEN_COMMA:
-		// 	if newValueNode == nil {
-		// 		fmt.Println("Error TOKEN_COMMA JSON Array at ", l.Line, ":", *pos)
-
-		// 		break
-		// 	}
-
-		// 	fmt.Println("Found COMMA !")
-		// 	fmt.Println("NewValueNode: ", *newValueNode)
-		// 	node.Children = append(node.Children, *newValueNode)
-
-		// 	newValueNode = nil
-		// case TOKEN_COL:
-		// 	log.Fatalln("Error TOKEN_COL Inside JSON Array at: ", l.Line, ":", *pos)
 		case TOKEN_ARR_END:
-			fmt.Println("Array End: ", node)
+			// fmt.Println("Array End: ", node)
 
 			return node
 			// case TOKEN_COMMA
@@ -112,7 +97,7 @@ func (p *Parser) parseObject(l *Lexer, pos *int) JsonNode {
 
 		token := l.Tokens[*pos]
 
-		fmt.Println("Processing Object Token: ", *pos, token)
+		// fmt.Println("Processing Object Token: ", *pos, token)
 
 		switch token.Type {
 		case TOKEN_OBJ_START:
@@ -149,7 +134,7 @@ func (p *Parser) parseObject(l *Lexer, pos *int) JsonNode {
 			// For now works just with values
 			switch token.Type {
 			case TOKEN_OBJ_START:
-				fmt.Println("Entering Child Object: ", *pos, token)
+				// fmt.Println("Entering Child Object: ", *pos, token)
 
 				*pos = *pos + 1
 
@@ -161,7 +146,7 @@ func (p *Parser) parseObject(l *Lexer, pos *int) JsonNode {
 				// Forse perchè in TOKEN_OBJ_END non incrementa pos ?
 				*pos = *pos + 1
 			case TOKEN_ARR_START:
-				fmt.Println("Entering Subarray in Object: ", *pos, token)
+				// fmt.Println("Entering Subarray in Object: ", *pos, token)
 
 				*pos = *pos + 1
 
@@ -178,13 +163,13 @@ func (p *Parser) parseObject(l *Lexer, pos *int) JsonNode {
 				valueNode = &newNode
 			}
 
-			fmt.Println("New PAIR: ", objKey, valueNode)
+			// fmt.Println("New PAIR: ", objKey, valueNode)
 
 			object.Pairs[objKey] = *valueNode
 		case TOKEN_OBJ_END:
 			node.Value = *object
 
-			fmt.Println("Object End: ", node)
+			// fmt.Println("Object End: ", node)
 
 			return node
 			// case TOKEN_COMMA
@@ -234,7 +219,7 @@ func (p *Parser) parse(l *Lexer) {
 
 		token := l.Tokens[pos]
 
-		fmt.Println("Lexer Token: ", token.Type, token.Value)
+		// fmt.Println("Lexer Token: ", token.Type, token.Value)
 
 		switch token.Type {
 		case TOKEN_START:
@@ -242,14 +227,14 @@ func (p *Parser) parse(l *Lexer) {
 			rootNode.Type = JSON_NODE_ROOT
 		//	p.parseObject(&pos)
 		case TOKEN_ARR_START:
-			fmt.Println("Parsing Array", pos, token.Type)
+			// fmt.Println("Parsing Array", pos, token.Type)
 			pos++
 
 			newNode := p.parseArray(l, &pos)
 
 			rootNode.Children = append(rootNode.Children, newNode)
 		case TOKEN_OBJ_START:
-			fmt.Println("Parsing Array", pos, token.Type)
+			// fmt.Println("Parsing Array", pos, token.Type)
 			pos++
 
 			newNode := p.parseObject(l, &pos)

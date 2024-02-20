@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -66,7 +65,7 @@ func (l *Lexer) readBoolean(pos *int) string {
 			log.Fatalln("JSON: Error Wrong Boolean -> ", *pos, literal, string(l.Buffer[(*pos-50):(*pos+50)]))
 		}
 
-		fmt.Println("Found Boolean: ", literal)
+		// fmt.Println("Found Boolean: ", literal)
 
 		incPos(pos, 4)
 	} else if l.Buffer[*pos] == 'f' {
@@ -76,11 +75,11 @@ func (l *Lexer) readBoolean(pos *int) string {
 			log.Fatalln("JSON: Error Wrong Boolean -> ", *pos, literal, string(l.Buffer[(*pos-50):(*pos+50)]))
 		}
 
-		fmt.Println("Found Boolean: ", literal)
+		// fmt.Println("Found Boolean: ", literal)
 
 		incPos(pos, 5)
 	} else {
-		fmt.Println("JSON: Literal is: ", literal)
+		// fmt.Println("JSON: Literal is: ", literal)
 		log.Fatalln("JSON: Error Parsing Boolean -> ", *pos, string(l.Buffer[(*pos-50):(*pos+50)]))
 	}
 
@@ -112,7 +111,7 @@ func (l *Lexer) readNull(pos *int) string {
 	literal := string(l.Buffer[*pos:(*pos + 4)])
 
 	if literal != "null" {
-		fmt.Println("JSON: Literal is: ", literal)
+		// fmt.Println("JSON: Literal is: ", literal)
 		log.Fatalln("JSON: Error Parsing Null Value -> ", *pos, string(l.Buffer[(*pos-50):(*pos+50)]))
 	}
 
@@ -132,13 +131,13 @@ func (l *Lexer) lexer(buffer []byte) {
 
 	for {
 		if pos >= (l.Length - 1) {
-			fmt.Println("JSON: Finished Lexing -> ", pos, l.Length)
+			// fmt.Println("JSON: Finished Lexing -> ", pos, l.Length)
 			break
 		}
 
 		c := l.Buffer[pos]
 
-		fmt.Println("Processing byte: ", string(c))
+		// fmt.Println("Processing byte: ", string(c))
 
 		switch c {
 		// use recursion ? lexer.childern = l.lexer(l.Buffer[i:])
@@ -147,7 +146,7 @@ func (l *Lexer) lexer(buffer []byte) {
 				l.Line++
 			}
 
-			fmt.Println("Found newline space or tab, skipping...")
+			// fmt.Println("Found newline space or tab, skipping...")
 			break
 		case '{':
 			l.createToken(TOKEN_OBJ_START, "{")
@@ -158,7 +157,7 @@ func (l *Lexer) lexer(buffer []byte) {
 		case ']':
 			l.createToken(TOKEN_ARR_END, "]")
 		case ',':
-			fmt.Println("Lexer: Found TOKEN_COMMA")
+			// fmt.Println("Lexer: Found TOKEN_COMMA")
 
 			l.createToken(TOKEN_COMMA, ",")
 		case '"':
@@ -168,19 +167,19 @@ func (l *Lexer) lexer(buffer []byte) {
 
 			l.createToken(TOKEN_STRING, literal)
 
-			fmt.Println("After readString: ", pos, string(c), literal)
+			// fmt.Println("After readString: ", pos, string(c), literal)
 		case ':':
-			fmt.Println("Found TOKEN_COL", pos, string(c))
+			// fmt.Println("Found TOKEN_COL", pos, string(c))
 
 			l.createToken(TOKEN_COL, ":")
 		case 't', 'f':
-			fmt.Println("Lexer: Found TOKEN_BOOLEAN ?")
-			fmt.Println("Found t or f, maybe Boolean: ", string(l.Buffer[pos:(pos+5)]))
+			// fmt.Println("Lexer: Found TOKEN_BOOLEAN ?")
+			// fmt.Println("Found t or f, maybe Boolean: ", string(l.Buffer[pos:(pos+5)]))
 			literal := l.readBoolean(&pos)
 
 			pos--
 
-			fmt.Println("After readBoolean: ", pos, literal)
+			// fmt.Println("After readBoolean: ", pos, literal)
 
 			l.createToken(TOKEN_BOOLEAN, literal)
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
@@ -192,7 +191,7 @@ func (l *Lexer) lexer(buffer []byte) {
 
 			l.createToken(TOKEN_NULL, literal)
 		default:
-			// fmt.Println("Char, Pos is: ", c, pos)
+			// // fmt.Println("Char, Pos is: ", c, pos)
 			log.Fatalln("Error Lexing JSON at: ", l.Line, ":", pos, string(l.Buffer[(pos-10):(pos+100)]))
 		}
 

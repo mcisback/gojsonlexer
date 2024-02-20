@@ -66,7 +66,8 @@ type JsonValue struct {
 }
 
 type JsonNode struct {
-	Type     JsonNodeType
+	Type JsonNodeType
+	// Value can be JsonArray, JsonObject or JsonValue
 	Value    any
 	Children []JsonNode
 }
