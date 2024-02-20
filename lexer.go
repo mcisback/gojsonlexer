@@ -5,37 +5,6 @@ import (
 	"log"
 )
 
-const (
-	TOKEN_START     = "TOKEN_START"
-	TOKEN_STRING    = "TOKEN_STRING"
-	TOKEN_NUMBER    = "TOKEN_NUMBER"
-	TOKEN_BOOLEAN   = "TOKEN_BOOLEAN"
-	TOKEN_COL       = "TOKEN_COL"
-	TOKEN_COMMA     = "TOKEN_COMMA"
-	TOKEN_OBJ_START = "TOKEN_OBJ_START"
-	TOKEN_OBJ_END   = "TOKEN_OBJ_END"
-	TOKEN_ARR_START = "TOKEN_ARR_START"
-	TOKEN_ARR_END   = "TOKEN_ARR_END"
-	TOKEN_NULL      = "TOKEN_NULL"
-)
-
-type TokenType string
-
-type Token struct {
-	Type  TokenType
-	Value string
-	Line  int
-}
-
-type Lexer struct {
-	Tokens []Token
-	Buffer []byte
-	Length int
-	Line   int
-	// TokenIndex int
-	// ? Children []Lexer
-}
-
 func isDigit(c byte) bool {
 	return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9'
 }

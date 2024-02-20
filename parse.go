@@ -5,50 +5,6 @@ import (
 	"log"
 )
 
-const (
-	JSON_VALUE_STRING  = "JSON_VALUE_STRING"
-	JSON_VALUE_NUMBER  = "JSON_VALUE_NUMBER"
-	JSON_VALUE_BOOLEAN = "JSON_VALUE_BOOLEAN"
-	JSON_VALUE_NULL    = "JSON_VALUE_NULL"
-)
-
-type JsonValueType string
-
-const (
-	JSON_NODE_ROOT   = "JSON_NODE_ROOT"
-	JSON_NODE_VALUE  = "JSON_NODE_VALUE"
-	JSON_NODE_OBJECT = "JSON_NODE_OBJECT"
-	JSON_NODE_ARRAY  = "JSON_NODE_ARRAY"
-	JSON_NODE_PAIR   = "JSON_NODE_ARRAY"
-)
-
-type JsonNodeType string
-
-type JsonPair map[string]JsonNode
-
-type JsonObject struct {
-	Pairs JsonPair
-}
-
-type JsonArray struct {
-	Items []JsonValue
-}
-
-type JsonValue struct {
-	Type  JsonValueType
-	Value string
-}
-
-type JsonNode struct {
-	Type     JsonNodeType
-	Value    any
-	Children []JsonNode
-}
-
-type Parser struct {
-	Root JsonNode
-}
-
 func (p *Parser) parseArray(l *Lexer, pos *int) JsonNode {
 
 	node := JsonNode{
@@ -59,7 +15,9 @@ func (p *Parser) parseArray(l *Lexer, pos *int) JsonNode {
 
 	for {
 		if *pos >= len(l.Tokens) {
-			log.Fatalln("Error Processing JSON Array")
+			fmt.Println("Error Processing JSON Array at: ", *pos, l.Line)
+
+			return node
 		}
 
 		token := l.Tokens[*pos]
@@ -304,126 +262,5 @@ func (p *Parser) parse(l *Lexer) {
 		}
 
 		pos++
-	}
-}
-
-func printRepeatStr(str string, level int) {
-	// fmt.Print(level)
-
-	for i := 0; i < level; i++ {
-		fmt.Print(str)
-	}
-}
-
-func printParser(node *JsonNode, level int) {
-	printRepeatStr("-", level)
-
-	// TODO Print Pairs
-
-	if node.Type == JSON_NODE_ARRAY {
-		fmt.Println("Array ", "(", len(node.Children), ") ", "([")
-	} else if node.Type == JSON_NODE_OBJECT {
-		fmt.Println("Object ", "(", len(node.Children), ") ", "{")
-	} else {
-		fmt.Println("Node(t:", node.Type, ", v:", node.Value, ", c:", len(node.Children), ")")
-	}
-
-	if len(node.Children) > 0 {
-		if node.Type == JSON_NODE_ARRAY {
-			for _, child := range node.Children {
-				printParser(&child, level+1)
-			}
-		}
-	}
-
-	if node.Type == JSON_NODE_OBJECT {
-		object := node.Value.(JsonObject)
-
-		for key := range object.Pairs {
-			pair := object.Pairs[key]
-
-			printParser(&pair, level+1)
-		}
-	}
-
-	if node.Type == JSON_NODE_ARRAY {
-		printRepeatStr("-", level)
-
-		fmt.Println("])")
-	} else if node.Type == JSON_NODE_OBJECT {
-		printRepeatStr("-", level)
-
-		fmt.Println("}")
-	}
-}
-
-func printJsonValue(node *JsonNode, key string, last bool) {
-	if key != "" {
-		fmt.Print("\"", key, "\": ")
-	}
-
-	value := node.Value.(JsonValue)
-
-	switch value.Type {
-	case JSON_VALUE_BOOLEAN, JSON_VALUE_NUMBER, JSON_VALUE_NULL:
-		fmt.Print(value.Value)
-	case JSON_VALUE_STRING:
-		if !last {
-			fmt.Print("\"")
-		}
-
-		fmt.Print(value.Value)
-
-		if !last {
-			fmt.Print("\"")
-		}
-	}
-
-	if !last {
-		fmt.Println(",")
-	}
-}
-
-func printJson(node *JsonNode, level int, key string) {
-	separator := "\t"
-
-	printRepeatStr(separator, level)
-
-	// TODO Print Pairs
-
-	if node.Type == JSON_NODE_ARRAY {
-		fmt.Println("[")
-	} else if node.Type == JSON_NODE_OBJECT {
-		fmt.Println("{")
-	} else if node.Type == JSON_NODE_VALUE {
-		printJsonValue(node, key, false)
-	}
-
-	if len(node.Children) > 0 {
-		if node.Type == JSON_NODE_ARRAY {
-			for _, child := range node.Children {
-				printJson(&child, level+1, "")
-			}
-		}
-	}
-
-	if node.Type == JSON_NODE_OBJECT {
-		object := node.Value.(JsonObject)
-
-		for key := range object.Pairs {
-			pair := object.Pairs[key]
-
-			printJson(&pair, level+1, key)
-		}
-	}
-
-	if node.Type == JSON_NODE_ARRAY {
-		printRepeatStr(separator, level)
-
-		fmt.Println("]")
-	} else if node.Type == JSON_NODE_OBJECT {
-		printRepeatStr(separator, level)
-
-		fmt.Println("}")
 	}
 }
