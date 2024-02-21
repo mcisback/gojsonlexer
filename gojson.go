@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"maps"
 	"os"
 	"regexp"
 	"strconv"
@@ -273,18 +274,35 @@ func (json *GoJson) getNode(path string, rootNode *JsonNode) *JsonNode {
 
 			jsonData := match[0]
 
-			fmt.Println("isObjectRegex match: ", jsonData)
+			// fmt.Println("isObjectRegex match: ", jsonData)
+
+			node = json.getNode(strings.Join(funcs[i+1:], "|"), nil)
+
+			// TODO: Add append to array, to object, etc...
 
 			j := GoJson{}
 
-			j.fromString(jsonData)
+			// FIXME: ? Doesn't work without a newline
+			j.fromString(jsonData + "\n")
 
 			// fmt.Println()
 			// fmt.Println()
 
 			newNode := j.getNode("$", nil)
 
-			fmt.Println(newNode)
+			object := node.Value.(JsonObject)
+
+			newPairs := newNode.Value.(JsonObject).Pairs
+
+			maps.Copy(object.Pairs, newPairs)
+
+			// fmt.Println(newPairs)
+
+			// fmt.Println(newNode)
+
+			// fmt.Println(object.Pairs)
+
+			return node
 		}
 		// } else {
 		// 	return json.getNode(strings.Join(funcs[i+1:], "|"), node)

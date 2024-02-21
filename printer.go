@@ -84,8 +84,6 @@ func printJson(node *JsonNode, level int, key string) {
 		fmt.Print("\"", key, "\": ")
 	}
 
-	// TODO Print Pairs
-
 	if node.Type == JSON_NODE_ARRAY {
 		fmt.Println("[")
 	} else if node.Type == JSON_NODE_OBJECT {

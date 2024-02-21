@@ -37,7 +37,6 @@ func (p *Parser) parseArray(l *Lexer, pos *int) JsonNode {
 			// Forse perchè in TOKEN_ARR_END non incrementa pos ?
 			*pos = *pos + 1
 
-		// TODO: Object start
 		case TOKEN_OBJ_START:
 			// fmt.Println("Entering Subobject inside Array: ", l.Line, ":", *pos, token)
 
@@ -103,9 +102,6 @@ func (p *Parser) parseObject(l *Lexer, pos *int) JsonNode {
 		case TOKEN_OBJ_START:
 			log.Fatalln("Error: Nested Object Without Key")
 
-		// TODO: Object start
-		//case TOKEN_OBJ_START:
-
 		case TOKEN_STRING: // Prende il valore fino a : e lo mette in key
 			// keyNode := p.parseValue(l, pos)
 			// newValueNode = &newNode
@@ -130,8 +126,6 @@ func (p *Parser) parseObject(l *Lexer, pos *int) JsonNode {
 
 			valueNode := &JsonNode{}
 
-			// TODO Process array and object
-			// For now works just with values
 			switch token.Type {
 			case TOKEN_OBJ_START:
 				// fmt.Println("Entering Child Object: ", *pos, token)
